@@ -14,6 +14,7 @@
 #define col3 PORTBbits.RB4
 #define LCD_ADDR 0x4E
 #define TIMEOUT_MAX 3
+#define TRANSMISSION_REPEATS 6
 
 
 

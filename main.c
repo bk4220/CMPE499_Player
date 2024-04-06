@@ -26,10 +26,11 @@ char check_strings();
 
 char has_printed_message = 0;
 char current_character = 0;
+char last_character = 0;
 char has_prior_check = 0;
 char new_input = 0;
 char character_match_cnt = 0;
-char Receiver_buffer[5][11];
+char Receiver_buffer[TRANSMISSION_REPEATS + 1][11];
 char Buffer_col_index = 0;
 char Buffer_row_index = 0;
 char Time_out = 0;
@@ -66,7 +67,7 @@ void main(void)
                new_input = 0;
            }
            
-           if(character_match_cnt >= 2 && !has_printed_message)
+           if(character_match_cnt >= 1 && !has_printed_message)
            {
                char i = 0;
                 //lcd_message(Receiver_buffer + (Buffer_index - 1));
@@ -75,24 +76,22 @@ void main(void)
                    //lcd_message(Receiver_buffer + (((Buffer_row_index - 1) * 11) + i));
                     //i++;
                 //}
-                
+               
+               
+               
+               
+                //BLOCKED FOR TESTING
+                //lcd_message(Receiver_buffer + (Buffer_row_index - 1) * 11);
+               
+               
+               //testing
+                lcd_move_cursor(1,0);
                 lcd_message(Receiver_buffer + (Buffer_row_index - 1) * 11);
+               
                 screen_has_text = 1;
                 has_printed_message = 1;
                 new_input = 0;
-                has_prior_check = 0;
-                character_match_cnt = 0;
-                Buffer_col_index = 0;
-                Buffer_row_index = 0;
-                Time_out = 0;
-                for(int i = 0; i < 5;i++)
-                {
-        
-                    for(int j = 0; j < 11;j++)
-                    {
-                        Receiver_buffer[i][j] = '\0';
-                    }
-                }
+                
            }
        }
     }
@@ -109,9 +108,9 @@ void __interrupt() ISR()
         //TMR0H = 0x00;
         //TMR0L = 0x00;
         
-    
+        last_character = current_character;
         current_character = (PORTB & 0x1F) >> 1;
-        
+        while(PORTBbits.RB0);
         INTCONbits.INT0IF = 0;
         while(!INTCONbits.INT0IF)
         {
@@ -129,36 +128,47 @@ void __interrupt() ISR()
                 character_match_cnt = 0;
                 Buffer_row_index = 0;
                 Buffer_col_index = 0;
-            for(int i = 0; i < 5;i++)
-            {
-        
-                for(int j = 0; j < 11;j++)
-                {
-                  Receiver_buffer[i][j] = '\0';
-                }
-            }
+            
               return;  
             }
             
          }
         }
         current_character = current_character | ((PORTB & 0x1E) << 3);
+        
         INTCONbits.INT0IF = 0;
         
         //T0CONbits.TMR0ON = 1;
-        if(current_character != 0xAA && current_character != 0xBB)
+        if(current_character != 0xAA && current_character != 0xBB && current_character != 'B')
         {
             Receiver_buffer[Buffer_row_index][Buffer_col_index] = current_character;
             Buffer_col_index++;
             
         }
-        else if(current_character == 0xBB)
+        else if(current_character == 0xBB && last_character != 0xBB)
         {
+            //test print
+            lcd_message(Receiver_buffer + (Buffer_row_index) * 11);
+            
+            Receiver_buffer[Buffer_row_index][Buffer_col_index] = '\0';
             Buffer_row_index++;
             Buffer_col_index = 0;
             new_input = 1;
         }
-        else
+        else if(current_character == 'B' && last_character != 'B')
+        {
+            lcd_clear();
+            has_printed_message = 0;
+            new_input = 0;
+            character_match_cnt = 0;
+            current_character = 0;
+            has_prior_check = 0;
+            Time_out = 0;
+            Buffer_row_index = 0;
+            Buffer_col_index = 0;
+            
+        }
+        else if ((current_character == 0xAA && (has_printed_message || Buffer_row_index == 0)) || Buffer_row_index >= 7)
         {
             has_printed_message = 0;
             new_input = 0;
@@ -168,14 +178,7 @@ void __interrupt() ISR()
             Time_out = 0;
             Buffer_row_index = 0;
             Buffer_col_index = 0;
-            for(int i = 0; i < 5;i++)
-            {
-        
-              for(int j = 0; j < 11;j++)
-              {
-                 Receiver_buffer[i][j] = '\0';
-                }
-            }
+            
         }
     }
     if(INTCONbits.TMR0IF == 1)
@@ -193,13 +196,10 @@ void __interrupt() ISR()
             character_match_cnt = 0;
             Buffer_row_index = 0;
             Buffer_col_index = 0;
-            for(int i = 0; i < 5;i++)
+            for(int i = 0; i < TRANSMISSION_REPEATS;i++)
             {
-        
-                for(int j = 0; j < 11;j++)
-                {
-                    Receiver_buffer[i][j] = '\0';
-                }
+                Receiver_buffer[i][8] = '\0';
+
             }
         }
     
@@ -212,7 +212,7 @@ char check_strings()
     char match_cnt = 0;
     char j = 0;
     char currently_match = 1;
-    for(int i = 0; i < Buffer_row_index; i++)
+    for(int i = 0; i < Buffer_row_index - 1; i++)
     {
         while(currently_match && Receiver_buffer[Buffer_row_index - 1][j] != '\0')
         {
@@ -440,7 +440,7 @@ void system_init()
     TRISCbits.RC4 = 1;
     
     //empty buffer array
-    for(int i = 0; i < 5;i++)
+    for(int i = 0; i < TRANSMISSION_REPEATS;i++)
     {
         
         for(int j = 0; j < 11;j++)
