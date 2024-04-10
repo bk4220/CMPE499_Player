@@ -23,6 +23,7 @@ void lcd_command(char data, char lt, char rw, char rs);
 void lcd_move_cursor(char line, char position);
 void lcd_backspace(void);
 char check_strings();
+void buffer_clear();
 
 char has_printed_message = 0;
 char current_character = 0;
@@ -50,7 +51,9 @@ void main(void)
     TMR0H = 0x00;
     TMR0L = 0x00;
     INTCONbits.TMR0IE = 1;
-    T0CONbits.TMR0ON = 1;
+    
+    //turned off for test
+    //T0CONbits.TMR0ON = 1;
     
     while(1)
     {
@@ -85,6 +88,8 @@ void main(void)
                
                
                //testing
+                //Time_out = 0;// if works keep in production
+                lcd_clear();
                 lcd_move_cursor(1,0);
                 lcd_message(Receiver_buffer + (Buffer_row_index - 1) * 11);
                
@@ -129,6 +134,8 @@ void __interrupt() ISR()
                 Buffer_row_index = 0;
                 Buffer_col_index = 0;
             
+                buffer_clear();
+                
               return;  
             }
             
@@ -148,25 +155,12 @@ void __interrupt() ISR()
         else if(current_character == 0xBB && last_character != 0xBB)
         {
             //test print
-            lcd_message(Receiver_buffer + (Buffer_row_index) * 11);
+            //lcd_message(Receiver_buffer + (Buffer_row_index) * 11);
             
             Receiver_buffer[Buffer_row_index][Buffer_col_index] = '\0';
             Buffer_row_index++;
             Buffer_col_index = 0;
             new_input = 1;
-        }
-        else if(current_character == 'B' && last_character != 'B')
-        {
-            lcd_clear();
-            has_printed_message = 0;
-            new_input = 0;
-            character_match_cnt = 0;
-            current_character = 0;
-            has_prior_check = 0;
-            Time_out = 0;
-            Buffer_row_index = 0;
-            Buffer_col_index = 0;
-            
         }
         else if ((current_character == 0xAA && (has_printed_message || Buffer_row_index == 0)) || Buffer_row_index >= 7)
         {
@@ -174,11 +168,14 @@ void __interrupt() ISR()
             new_input = 0;
             character_match_cnt = 0;
             current_character = 0;
+            last_character = 0;
             has_prior_check = 0;
             Time_out = 0;
             Buffer_row_index = 0;
             Buffer_col_index = 0;
             
+            
+            buffer_clear();
         }
     }
     if(INTCONbits.TMR0IF == 1)
@@ -196,15 +193,25 @@ void __interrupt() ISR()
             character_match_cnt = 0;
             Buffer_row_index = 0;
             Buffer_col_index = 0;
-            for(int i = 0; i < TRANSMISSION_REPEATS;i++)
-            {
-                Receiver_buffer[i][8] = '\0';
-
-            }
+            
+            buffer_clear();
+            
         }
     
     }
     return;
+}
+
+void buffer_clear()
+{
+    for(int i = 0; i < TRANSMISSION_REPEATS;i++)
+            {
+                for(int j = 0; j < 11; j++)
+                {
+                    Receiver_buffer[i][j] = '\0';
+                }
+
+            }
 }
 
 char check_strings()
@@ -440,12 +447,5 @@ void system_init()
     TRISCbits.RC4 = 1;
     
     //empty buffer array
-    for(int i = 0; i < TRANSMISSION_REPEATS;i++)
-    {
-        
-        for(int j = 0; j < 11;j++)
-        {
-            Receiver_buffer[i][j] = '\0';
-        }
-    }
+    buffer_clear();
 }

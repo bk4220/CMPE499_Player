@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project>
-  <executable name="dist/default/production\Receiver_032324_1440.production.hex">
+  <executable name="dist/default/production\Player.production.hex">
     <memory name="program">
       <units>bytes</units>
       <length>4096</length>
-      <used>3126</used>
-      <free>970</free>
+      <used>3068</used>
+      <free>1028</free>
     </memory>
     <memory name="data">
       <units>bytes</units>
       <length>512</length>
-      <used>159</used>
-      <free>353</free>
+      <used>151</used>
+      <free>361</free>
     </memory>
   </executable>
 </project>
