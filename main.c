@@ -59,6 +59,7 @@ void main(void)
     {
        if(new_input)
        {
+           lcd_message("A");
            if(has_prior_check == 0)
            {
                has_prior_check = 1;
@@ -80,8 +81,8 @@ void main(void)
                     //i++;
                 //}
                
-               
-               
+               //testing
+               INTCONbits.INT0IE = 0;
                
                 //BLOCKED FOR TESTING
                 //lcd_message(Receiver_buffer + (Buffer_row_index - 1) * 11);
@@ -93,6 +94,9 @@ void main(void)
                 lcd_move_cursor(1,0);
                 lcd_message(Receiver_buffer + (Buffer_row_index - 1) * 11);
                
+                //testing
+                INTCONbits.INT0IE = 1;
+                
                 screen_has_text = 1;
                 has_printed_message = 1;
                 new_input = 0;

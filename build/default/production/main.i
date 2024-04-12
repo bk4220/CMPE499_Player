@@ -4267,6 +4267,7 @@ void main(void)
     {
        if(new_input)
        {
+           lcd_message("A");
            if(has_prior_check == 0)
            {
                has_prior_check = 1;
@@ -4281,10 +4282,21 @@ void main(void)
            if(character_match_cnt >= 1 && !has_printed_message)
            {
                char i = 0;
-# 92 "main.c"
+# 85 "main.c"
+               INTCONbits.INT0IE = 0;
+
+
+
+
+
+
+
                 lcd_clear();
                 lcd_move_cursor(1,0);
                 lcd_message(Receiver_buffer + (Buffer_row_index - 1) * 11);
+
+
+                INTCONbits.INT0IE = 1;
 
                 screen_has_text = 1;
                 has_printed_message = 1;
@@ -4482,7 +4494,7 @@ void lcd_init()
     lcd_message("Capstone");
 
     lcd_clear();
-# 300 "main.c"
+# 304 "main.c"
 }
 
 void lcd_backspace()
