@@ -4320,6 +4320,7 @@ void __attribute__((picinterrupt(("")))) ISR()
 
         last_character = current_character;
         current_character = (PORTB & 0x1F) >> 1;
+        lcd_message("B");
         while(PORTBbits.RB0);
         INTCONbits.INT0IF = 0;
         while(!INTCONbits.INT0IF)
@@ -4351,7 +4352,7 @@ void __attribute__((picinterrupt(("")))) ISR()
         INTCONbits.INT0IF = 0;
 
 
-        if(current_character != 0xAA && current_character != 0xBB && current_character != 'B')
+        if(current_character != 0xAA && current_character != 0xBB)
         {
             Receiver_buffer[Buffer_row_index][Buffer_col_index] = current_character;
             Buffer_col_index++;
@@ -4494,7 +4495,7 @@ void lcd_init()
     lcd_message("Capstone");
 
     lcd_clear();
-# 304 "main.c"
+# 305 "main.c"
 }
 
 void lcd_backspace()
