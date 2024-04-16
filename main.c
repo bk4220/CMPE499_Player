@@ -59,7 +59,7 @@ void main(void)
     {
        if(new_input)
        {
-           lcd_message("A");
+           
            if(has_prior_check == 0)
            {
                has_prior_check = 1;
@@ -119,7 +119,7 @@ void __interrupt() ISR()
         
         last_character = current_character;
         current_character = (PORTB & 0x1F) >> 1;
-        lcd_message("B");
+        
         while(PORTBbits.RB0);
         INTCONbits.INT0IF = 0;
         while(!INTCONbits.INT0IF)
@@ -182,6 +182,10 @@ void __interrupt() ISR()
             
             buffer_clear();
         }
+        T0CONbits.TMR0ON = 0;
+        TMR0H = 0x00;
+        TMR0L = 0x00;
+        T0CONbits.TMR0ON = 1;
     }
     if(INTCONbits.TMR0IF == 1)
     {
