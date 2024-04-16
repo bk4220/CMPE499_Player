@@ -4258,16 +4258,16 @@ void main(void)
     INTCONbits.TMR0IF = 0;
     TMR0H = 0x00;
     TMR0L = 0x00;
-    INTCONbits.TMR0IE = 1;
 
 
 
+    T0CONbits.TMR0ON = 1;
 
     while(1)
     {
        if(new_input)
        {
-
+           Time_out = 0;
            if(has_prior_check == 0)
            {
                has_prior_check = 1;
@@ -4292,7 +4292,6 @@ void main(void)
 
 
                 lcd_clear();
-                lcd_move_cursor(1,0);
                 lcd_message(Receiver_buffer + (Buffer_row_index - 1) * 11);
 
 
@@ -4301,7 +4300,7 @@ void main(void)
                 screen_has_text = 1;
                 has_printed_message = 1;
                 new_input = 0;
-
+                INTCONbits.TMR0IE = 1;
            }
        }
     }
@@ -4321,15 +4320,17 @@ void __attribute__((picinterrupt(("")))) ISR()
         last_character = current_character;
         current_character = (PORTB & 0x1F) >> 1;
 
-        while(PORTBbits.RB0);
+
         INTCONbits.INT0IF = 0;
+        INTCONbits.TMR0IF = 0;
         while(!INTCONbits.INT0IF)
         {
+
          if(INTCONbits.TMR0IF == 1)
          {
              INTCONbits.TMR0IF = 0;
             Time_out++;
-            if(Time_out == 3 && !new_input && screen_has_text)
+            if(Time_out == 2 && !new_input && screen_has_text)
             {
              lcd_clear();
              screen_has_text = 0;
@@ -4350,7 +4351,11 @@ void __attribute__((picinterrupt(("")))) ISR()
         current_character = current_character | ((PORTB & 0x1E) << 3);
 
         INTCONbits.INT0IF = 0;
-
+# 165 "main.c"
+        if(Buffer_row_index > 6 || Buffer_col_index > 10)
+        {
+            __asm("reset");
+        }
 
         if(current_character != 0xAA && current_character != 0xBB)
         {
@@ -4383,17 +4388,21 @@ void __attribute__((picinterrupt(("")))) ISR()
 
             buffer_clear();
         }
-        T0CONbits.TMR0ON = 0;
-        TMR0H = 0x00;
-        TMR0L = 0x00;
-        T0CONbits.TMR0ON = 1;
+
+            T0CONbits.TMR0ON = 0;
+            TMR0H = 0x00;
+            TMR0L = 0x00;
+            INTCONbits.TMR0IF = 0;
+            Time_out = 0;
+            T0CONbits.TMR0ON = 1;
+
     }
     if(INTCONbits.TMR0IF == 1)
     {
 
         INTCONbits.TMR0IF = 0;
         Time_out++;
-        if(Time_out >= 3 && !new_input && screen_has_text)
+        if(Time_out >= 2 && !new_input && screen_has_text)
         {
             lcd_clear();
             screen_has_text = 0;
@@ -4405,7 +4414,7 @@ void __attribute__((picinterrupt(("")))) ISR()
             Buffer_col_index = 0;
 
             buffer_clear();
-
+            INTCONbits.TMR0IE = 0;
         }
 
     }
@@ -4499,7 +4508,7 @@ void lcd_init()
     lcd_message("Capstone");
 
     lcd_clear();
-# 309 "main.c"
+# 329 "main.c"
 }
 
 void lcd_backspace()

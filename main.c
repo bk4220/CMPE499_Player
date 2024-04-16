@@ -50,16 +50,16 @@ void main(void)
     INTCONbits.TMR0IF = 0;    
     TMR0H = 0x00;
     TMR0L = 0x00;
-    INTCONbits.TMR0IE = 1;
+    
     
     //turned off for test
-    //T0CONbits.TMR0ON = 1;
+    T0CONbits.TMR0ON = 1;
     
     while(1)
     {
        if(new_input)
        {
-           
+           Time_out = 0;
            if(has_prior_check == 0)
            {
                has_prior_check = 1;
@@ -91,7 +91,6 @@ void main(void)
                //testing
                 //Time_out = 0;// if works keep in production
                 lcd_clear();
-                lcd_move_cursor(1,0);
                 lcd_message(Receiver_buffer + (Buffer_row_index - 1) * 11);
                
                 //testing
@@ -100,7 +99,7 @@ void main(void)
                 screen_has_text = 1;
                 has_printed_message = 1;
                 new_input = 0;
-                
+                INTCONbits.TMR0IE = 1;
            }
        }
     }
@@ -120,10 +119,12 @@ void __interrupt() ISR()
         last_character = current_character;
         current_character = (PORTB & 0x1F) >> 1;
         
-        while(PORTBbits.RB0);
+        //while(PORTBbits.RB0);
         INTCONbits.INT0IF = 0;
+        INTCONbits.TMR0IF = 0;
         while(!INTCONbits.INT0IF)
         {
+            
          if(INTCONbits.TMR0IF == 1)
          {
              INTCONbits.TMR0IF = 0;
@@ -151,6 +152,21 @@ void __interrupt() ISR()
         INTCONbits.INT0IF = 0;
         
         //T0CONbits.TMR0ON = 1;
+        
+        //test code
+        //char char_temp = current_character;
+        //if(char_temp == 0xAA)
+         //   char_temp = 'A';
+        //if(char_temp == 0xBB)
+        //    char_temp = 'B';
+        //char temp[2] = {char_temp, '\0'};
+        //lcd_message(temp);
+        
+        if(Buffer_row_index > 6 || Buffer_col_index > 10)
+        {
+            asm("reset");
+        }
+        
         if(current_character != 0xAA && current_character != 0xBB)
         {
             Receiver_buffer[Buffer_row_index][Buffer_col_index] = current_character;
@@ -182,10 +198,14 @@ void __interrupt() ISR()
             
             buffer_clear();
         }
-        T0CONbits.TMR0ON = 0;
-        TMR0H = 0x00;
-        TMR0L = 0x00;
-        T0CONbits.TMR0ON = 1;
+
+            T0CONbits.TMR0ON = 0;
+            TMR0H = 0x00;
+            TMR0L = 0x00;
+            INTCONbits.TMR0IF = 0;
+            Time_out = 0;
+            T0CONbits.TMR0ON = 1;
+  
     }
     if(INTCONbits.TMR0IF == 1)
     {
@@ -204,7 +224,7 @@ void __interrupt() ISR()
             Buffer_col_index = 0;
             
             buffer_clear();
-            
+            INTCONbits.TMR0IE = 0;
         }
     
     }
